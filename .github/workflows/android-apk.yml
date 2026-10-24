@@ -3,42 +3,26 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - 'BedrockCompanion-Mobile-Android-Project.zip'
+      - 'android-app/**'
       - '.github/workflows/android-apk.yml'
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-      - name: Unpack project
-        run: unzip -o BedrockCompanion-Mobile-Android-Project.zip -d project
-      - name: Align Java and Kotlin JVM targets
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("project/app/build.gradle.kts")
-          s = p.read_text()
-          if "sourceCompatibility = JavaVersion.VERSION_17" not in s:
-              s = s.replace("android {", """android {
-              compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }""", 1)
-          p.write_text(s)
-          PY
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Build debug APK
-        run: gradle -p project assembleDebug
+        run: gradle -p android-app assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BedrockCompanion-debug-apk
-          path: project/app/build/outputs/apk/debug/*.apk
+          name: BedrockCompanion-fixed-debug-apk
+          path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
